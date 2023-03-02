@@ -249,4 +249,16 @@ def appendContents {α : TypeVec n} {β : Type _} {a : P.A} (f' : P.drop.B a ⟹
   splitFun f' f
 #align mvpfunctor.append_contents MvPFunctor.appendContents
 
+
+
+variable {P}
+
+/-- `appendContents` is injective -/
+theorem appendContents.inj  {α : TypeVec n} {β : Type _}
+                            {a : P.A}
+                            {f'₀ f'₁ : P.drop.B a  ⟹ α}
+                            {f₀ f₁ : P.last.B a → β} :
+      appendContents P f'₀ f₀ = appendContents P f'₁ f₁ → (f'₀ = f'₁ ∧ f₀ = f₁)
+  := splitFun_inj
+
 end MvPFunctor

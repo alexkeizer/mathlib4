@@ -53,7 +53,10 @@ open MvFunctor (LiftP LiftR)
 
 open MvFunctor
 
-variable {n : ℕ} {F : TypeVec.{u} (n + 1) → Type u} [MvFunctor F] [q : MvQPF F]
+variable {n : ℕ} {F : TypeVec.{u} (n + 1) → Type u}
+
+section
+  variable [q : MvQPF F]
 
 
 /-- `recF` is used as a basis for defining the recursor on `Fix F α`. `recF`
@@ -100,7 +103,7 @@ theorem recF_eq_of_wEquiv (α : TypeVec n) {β : Type _} (u : F (α.append1 β) 
   intro a₁ f'₁ f₁
   intro h
   -- porting note: induction on h doesn't work.
-  refine' @WEquiv.recOn _ _ _ _ _ (λ a a' _ => recF u a = recF u a') _ _ h _ _ _
+  refine' @WEquiv.recOn _ _ _ _ (λ a a' _ => recF u a = recF u a') _ _ h _ _ _
   · intros a f' f₀ f₁ _h ih; simp only [recF_eq, Function.comp]
     congr; funext; congr; funext; apply ih
   · intros a₀ f'₀ f₀ a₁ f'₁ f₁ h; simp only [recF_eq', abs_map, MvPFunctor.wDest'_wMk, h]
@@ -175,7 +178,7 @@ set_option linter.uppercaseLean3 false in
 /-- Define the fixed point as the quotient of trees under the equivalence relation.
 -/
 def wSetoid (α : TypeVec n) : Setoid (q.P.W α) :=
-  ⟨WEquiv, @wEquiv.refl _ _ _ _ _, @wEquiv.symm _ _ _ _ _, @WEquiv.trans _ _ _ _ _⟩
+  ⟨WEquiv, @wEquiv.refl _ _ _ _, @wEquiv.symm _ _ _ _, @WEquiv.trans _ _ _ _⟩
 set_option linter.uppercaseLean3 false in
 #align mvqpf.W_setoid MvQPF.wSetoid
 
@@ -188,7 +191,7 @@ than the input. For `F a b c` a ternary functor, `Fix F` is a binary functor suc
 Fix F a b = F a b (Fix F a b)
 ```
 -/
-def Fix {n : ℕ} (F : TypeVec (n + 1) → Type _) [MvFunctor F] [q : MvQPF F] (α : TypeVec n) :=
+def Fix {n : ℕ} (F : TypeVec (n + 1) → Type _) [q : MvQPF F] (α : TypeVec n) :=
   Quotient (wSetoid α : Setoid (q.P.W α))
 #align mvqpf.fix MvQPF.Fix
 
@@ -199,7 +202,7 @@ def Fix.map {α β : TypeVec n} (g : α ⟹ β) : Fix F α → Fix F β :=
   Quotient.lift (fun x : q.P.W α => ⟦q.P.wMap g x⟧) fun _a _b h => Quot.sound (wEquiv_map _ _ _ h)
 #align mvqpf.fix.map MvQPF.Fix.map
 
-instance Fix.mvfunctor : MvFunctor (Fix F) where map := @Fix.map _ _ _ _
+instance Fix.mvfunctor : MvFunctor (Fix F) where map := @Fix.map _ _ _
 #align mvqpf.fix.mvfunctor MvQPF.Fix.mvfunctor
 
 variable {α : TypeVec.{u} n}
@@ -348,7 +351,7 @@ instance mvqpfFix : MvQPF (Fix F) where
 /-- Dependent recursor for `fix F` -/
 def Fix.drec {β : Fix F α → Type u}
     (g : ∀ x : F (α ::: Sigma β), β (Fix.mk <| (id ::: Sigma.fst) <$$> x)) (x : Fix F α) : β x :=
-  let y := @Fix.rec _ F _ _ α (Sigma β) (fun i => ⟨_, g i⟩) x
+  let y := @Fix.rec _ F _ α (Sigma β) (fun i => ⟨_, g i⟩) x
   have : x = y.1 := by
     symm
     dsimp
@@ -367,10 +370,54 @@ def Fix.drec {β : Fix F α → Type u}
 
 #align mvqpf.fix.drec MvQPF.Fix.drec
 
+end
 
-instance [IsPolynomial F] : IsPolynomial (Fix F) where
-  repr_abs := by
-    intros α' x;
-    unfold abs repr
+namespace Fix
+
+section
+  variable [q : IsPolynomial F]
+
+  theorem wEquiv_is_rfl_of_isPolynomial (x y : q.P.W α) :
+    WEquiv x y → x = y :=
+  by
+
+    intro h
+    induction h
+    case ind ih =>
+      congr
+      funext x
+      apply ih x
+
+    case abs a₀ f'₀ f₀ a₁ f'₁ f₁ ih =>
+      have :  repr (abs ⟨a₀, MvPFunctor.appendContents (P F) f'₀ f₀⟩)
+            = repr (abs ⟨a₁, MvPFunctor.appendContents (P F) f'₁ f₁⟩)
+        := by rw[ih];
+      clear ih
+      simp only [IsPolynomial.repr_abs] at this
+      rcases Sigma.mk.inj_iff.mp this with ⟨⟨⟩, heq⟩
+      have := MvPFunctor.appendContents.inj <| eq_of_heq heq
+      rcases this with ⟨⟨⟩, ⟨⟩⟩
+      rfl
+
+    case trans ih₀ ih₁ =>
+      apply Eq.trans ih₀ ih₁
+
+  theorem wrepr_id_of_IsPolynomial (x : q.P.W α) :
+    wrepr x = x :=
+  by
+    apply wEquiv_is_rfl_of_isPolynomial
+    apply wrepr_equiv;
+
+
+  instance : IsPolynomial (Fix F) where
+    repr_abs := by
+      intros α' x;
+      rcases x with ⟨⟨a', f'⟩, f⟩
+      rw [repr, abs];
+      apply wrepr_id_of_IsPolynomial
+
+end
+
+end Fix
 
 end MvQPF

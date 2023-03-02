@@ -31,7 +31,7 @@ variable {F : TypeVec.{u} n → Type u}
 
 section repr
 
-variable [MvFunctor F] [q : MvQPF F]
+variable [q : MvQPF F]
 
 variable {G : TypeVec.{u} n → Type u} [MvFunctor G]
 
@@ -67,7 +67,7 @@ instance Quot1.inhabited {α : TypeVec n} [Inhabited <| F α] : Inhabited (Quot1
   ⟨Quot.mk _ default⟩
 #align mvqpf.quot1.inhabited MvQPF.Quot1.inhabited
 
-variable [MvFunctor F] [q : MvQPF F]
+variable [q : MvQPF F]
 
 variable (Hfunc : ∀ ⦃α β⦄ (a b : F α) (f : α ⟹ β), R a b → R (f <$$> a) (f <$$> b))
 
@@ -81,8 +81,8 @@ def Quot1.mvFunctor : MvFunctor (Quot1 R) where map := @Quot1.map _ _ R _ Hfunc
 #align mvqpf.quot1.mvfunctor MvQPF.Quot1.mvFunctor
 
 /-- `Quot1` is a QPF -/
-noncomputable def relQuot : @MvQPF _ (Quot1 R) (MvQPF.Quot1.mvFunctor R Hfunc) :=
-  @quotientQPF n F _ q _ (MvQPF.Quot1.mvFunctor R Hfunc) (fun x => Quot.mk _ x)
+noncomputable def relQuot : MvQPF (Quot1 R) :=
+  @quotientQPF n F q _ (MvQPF.Quot1.mvFunctor R Hfunc) (fun x => Quot.mk _ x)
     Quot.out (fun _x => Quot.out_eq _) fun _f _x => rfl
 #align mvqpf.rel_quot MvQPF.relQuot
 

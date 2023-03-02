@@ -85,7 +85,7 @@ open MvFunctor
 
 /-- Multivariate quotients of polynomial functors.
 -/
-class MvQPF {n : ℕ} (F : TypeVec.{u} n → Type _) [MvFunctor F] where
+class MvQPF {n : ℕ} (F : TypeVec.{u} n → Type _) extends MvFunctor F where
   P : MvPFunctor.{u} n
   abs : ∀ {α}, P.Obj α → F α
   repr : ∀ {α}, F α → P.Obj α
@@ -95,7 +95,7 @@ class MvQPF {n : ℕ} (F : TypeVec.{u} n → Type _) [MvFunctor F] where
 
 namespace MvQPF
 
-variable {n : ℕ} {F : TypeVec.{u} n → Type _} [MvFunctor F] [q : MvQPF F]
+variable {n : ℕ} {F : TypeVec.{u} n → Type _} [q : MvQPF F]
 
 open MvFunctor (LiftP LiftR)
 
@@ -121,8 +121,8 @@ theorem comp_map {α β γ : TypeVec n} (f : α ⟹ β) (g : β ⟹ γ) (x : F �
 #align mvqpf.comp_map MvQPF.comp_map
 
 instance (priority := 100) lawfulMvFunctor : LawfulMvFunctor F where
-  id_map := @MvQPF.id_map n F _ _
-  comp_map := @comp_map n F _ _
+  id_map := @MvQPF.id_map n F _
+  comp_map := @comp_map n F _
 #align mvqpf.is_lawful_mvfunctor MvQPF.lawfulMvFunctor
 
 -- Lifting predicates and relations
@@ -295,7 +295,7 @@ namespace MvQPF
     `repr_abs` is the last property needed to show that `abs` is an isomorphism, with `repr`
     its inverse
   -/
-  class IsPolynomial (F : TypeVec n → Type _) [MvFunctor F] extends MvQPF F where
+  class IsPolynomial (F : TypeVec n → Type _) extends MvQPF F where
     repr_abs : ∀ {α} (x : P.Obj α), repr (abs x) = x
   #align mvqpf.is_polynomial MvQPF.IsPolynomial
 
@@ -316,15 +316,18 @@ namespace MvQPF
     }
     #align mvqpf.is_polynomial.equiv MvQPF.IsPolynomial.equiv
 
-    def mvFunctorOfEquiv {P : MvPFunctor n} (eqv : ∀ {α}, F α ≃ P.Obj α) : MvFunctor F where
-      map f x := eqv.invFun <| P.map f <| eqv.toFun <| x
 
-    def ofEquiv {P : MvPFunctor n} (eqv : ∀ {α}, F α ≃ P.Obj α) : @IsPolynomial _ F (mvFunctorOfEquiv eqv) where
+    def ofEquiv {P : MvPFunctor n} (eqv : ∀ {α}, F α ≃ P.Obj α) : IsPolynomial F where
+      map f x   := eqv.invFun <| P.map f <| eqv.toFun <| x
       P         := P
-      abs       := _
-      repr      := _
-      abs_repr  := by sorry
-      abs_map   := by sorry
+      abs       := eqv.invFun
+      repr      := eqv.toFun
+      abs_repr  := eqv.left_inv
+      abs_map   := by intros;
+                      simp only [Equiv.invFun_as_coe, Equiv.toFun_as_coe_apply,
+                                 Equiv.apply_symm_apply, EmbeddingLike.apply_eq_iff_eq];
+                      rfl
+      repr_abs  := eqv.right_inv
 
   end IsPolynomial
 
