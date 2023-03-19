@@ -317,7 +317,7 @@ namespace MvQPF
     #align mvqpf.is_polynomial.equiv MvQPF.IsPolynomial.equiv
 
 
-    def ofEquiv {P : MvPFunctor n} (eqv : ∀ {α}, F α ≃ P.Obj α) : IsPolynomial F where
+    def ofEquiv (P : MvPFunctor n) (eqv : ∀ {α}, F α ≃ P.Obj α) : IsPolynomial F where
       map f x   := eqv.invFun <| P.map f <| eqv.toFun <| x
       P         := P
       abs       := eqv.invFun
