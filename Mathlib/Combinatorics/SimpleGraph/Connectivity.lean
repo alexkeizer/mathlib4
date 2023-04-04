@@ -798,7 +798,7 @@ theorem dart_snd_mem_support_of_mem_darts {u v : V} (p : G.Walk u v) {d : G.Dart
 theorem fst_mem_support_of_mem_edges {t u v w : V} (p : G.Walk v w) (he : ⟦(t, u)⟧ ∈ p.edges) :
     t ∈ p.support := by
   obtain ⟨d, hd, he⟩ := List.mem_map.mp he
-  rw [eq_comm, dart_edge_eq_mk'_iff'] at he
+  rw [dart_edge_eq_mk'_iff'] at he
   rcases he with (⟨rfl, rfl⟩ | ⟨rfl, rfl⟩)
   · exact dart_fst_mem_support_of_mem_darts _ hd
   · exact dart_snd_mem_support_of_mem_darts _ hd
@@ -2242,10 +2242,8 @@ theorem coe_finsetWalkLength_eq (n : ℕ) (u v : V) :
     ext p
     simp only [mem_neighborSet, Finset.coe_map, Embedding.coeFn_mk, Set.unionᵢ_coe_set,
       Set.mem_unionᵢ, Set.mem_image, Finset.mem_coe, Set.mem_setOf_eq]
-    -- porting note: using `apply iff_of_eq` to help `congr`
-    apply iff_of_eq; congr with w
-    apply iff_of_eq; congr with h
-    apply iff_of_eq; congr with q
+    congr!
+    rename_i w _ q
     have := Set.ext_iff.mp (ih w v) q
     simp only [Finset.mem_coe, Set.mem_setOf_eq] at this
     rw [← this]
@@ -2340,7 +2338,7 @@ theorem reachable_delete_edges_iff_exists_walk {v w : V} :
   constructor
   · rintro ⟨p⟩
     use p.map (Hom.mapSpanningSubgraphs (by simp))
-    simp_rw [Walk.edges_map, List.mem_map', Hom.mapSpanningSubgraphs_apply, Sym2.map_id', id.def]
+    simp_rw [Walk.edges_map, List.mem_map, Hom.mapSpanningSubgraphs_apply, Sym2.map_id', id.def]
     rintro ⟨e, h, rfl⟩
     simpa using p.edges_subset_edgeSet h
   · rintro ⟨p, h⟩

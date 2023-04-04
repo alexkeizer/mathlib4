@@ -146,10 +146,10 @@ theorem mk_smul (r : S) (x : M) : (mk (r • x) : M ⧸ p) = r • mk x :=
   rfl
 #align submodule.quotient.mk_smul Submodule.Quotient.mk_smul
 
-instance sMulCommClass (T : Type _) [SMul T R] [SMul T M] [IsScalarTower T R M]
+instance smulCommClass (T : Type _) [SMul T R] [SMul T M] [IsScalarTower T R M]
     [SMulCommClass S T M] : SMulCommClass S T (M ⧸ P)
     where smul_comm _x _y := Quotient.ind' fun _z => congr_arg mk (smul_comm _ _ _)
-#align submodule.quotient.smul_comm_class Submodule.Quotient.sMulCommClass
+#align submodule.quotient.smul_comm_class Submodule.Quotient.smulCommClass
 
 instance isScalarTower (T : Type _) [SMul T R] [SMul T M] [IsScalarTower T R M] [SMul S T]
     [IsScalarTower S T M] : IsScalarTower S T (M ⧸ P)
@@ -342,7 +342,7 @@ variable {R₂ M₂ : Type _} [Ring R₂] [AddCommGroup M₂] [Module R₂ M₂]
 `submodule.mkQ` are equal.
 
 See note [partially-applied ext lemmas]. -/
-@[ext 1001] -- porting note: increase priority so this applies before `LinearMap.ext`
+@[ext 1100] -- porting note: increase priority so this applies before `LinearMap.ext`
 theorem linearMap_qext ⦃f g : M ⧸ p →ₛₗ[τ₁₂] M₂⦄ (h : f.comp p.mkQ = g.comp p.mkQ) : f = g :=
   LinearMap.ext fun x => Quotient.inductionOn' x <| (LinearMap.congr_fun h : _)
 #align submodule.linear_map_qext Submodule.linearMap_qext

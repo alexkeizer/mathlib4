@@ -4,12 +4,13 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Johannes Hölzl, Yury Kudryashov
 
 ! This file was ported from Lean 3 source module data.real.ennreal
-! leanprover-community/mathlib commit 57ac39bd365c2f80589a700f9fbb664d3a1a30c2
+! leanprover-community/mathlib commit 29cb56a7b35f72758b05a30490e1f10bd62c35c1
 ! Please do not edit these lines, except to modify the commit id
 ! if you have ported upstream changes.
 -/
 import Mathlib.Data.Real.NNReal
 import Mathlib.Algebra.Order.Sub.WithTop
+import Mathlib.Data.Set.Intervals.WithBotTop
 
 /-!
 # Extended non-negative reals
@@ -152,6 +153,9 @@ instance canLift : CanLift ℝ≥0∞ ℝ≥0 some (· ≠ ∞) := WithTop.canLi
 
 @[simp] theorem some_eq_coe' (a : ℝ≥0) : (WithTop.some a : ℝ≥0∞) = (↑a : ℝ≥0∞) := rfl
 
+theorem range_coe' : range some = Iio ∞ := WithTop.range_coe
+theorem range_coe : range some = {∞}ᶜ := (isCompl_range_some_none ℝ≥0).symm.compl_eq.symm
+
 /-- `to_nnreal x` returns `x` if it is real, otherwise 0. -/
 protected def toNNReal : ℝ≥0∞ → ℝ≥0 := WithTop.untop' 0
 #align ennreal.to_nnreal ENNReal.toNNReal
@@ -293,6 +297,20 @@ theorem toReal_eq_one_iff (x : ℝ≥0∞) : x.toReal = 1 ↔ x = 1 := by
 @[simp] theorem top_ne_ofReal {r : ℝ} : ∞ ≠ ENNReal.ofReal r := top_ne_coe
 #align ennreal.top_ne_of_real ENNReal.top_ne_ofReal
 
+@[simp]
+theorem ofReal_toReal_eq_iff : ENNReal.ofReal a.toReal = a ↔ a ≠ ⊤ :=
+  ⟨fun h => by
+    rw [← h]
+    exact ofReal_ne_top, ofReal_toReal⟩
+#align ennreal.of_real_to_real_eq_iff ENNReal.ofReal_toReal_eq_iff
+
+@[simp]
+theorem toReal_ofReal_eq_iff {a : ℝ} : (ENNReal.ofReal a).toReal = a ↔ 0 ≤ a :=
+  ⟨fun h => by
+    rw [← h]
+    exact toReal_nonneg, toReal_ofReal⟩
+#align ennreal.to_real_of_real_eq_iff ENNReal.toReal_ofReal_eq_iff
+
 @[simp] theorem zero_ne_top : 0 ≠ ∞ := coe_ne_top
 #align ennreal.zero_ne_top ENNReal.zero_ne_top
 
@@ -316,6 +334,8 @@ theorem toReal_eq_one_iff (x : ℝ≥0∞) : x.toReal = 1 ↔ x = 1 := by
 
 theorem coe_mono : Monotone some := fun _ _ => coe_le_coe.2
 #align ennreal.coe_mono ENNReal.coe_mono
+
+theorem coe_strictMono : StrictMono some := fun _ _ => coe_lt_coe.2
 
 @[simp, norm_cast] theorem coe_eq_zero : (↑r : ℝ≥0∞) = 0 ↔ r = 0 := coe_eq_coe
 #align ennreal.coe_eq_zero ENNReal.coe_eq_zero
@@ -457,13 +477,13 @@ theorem smul_def {M : Type _} [MulAction ℝ≥0∞ M] (c : ℝ≥0) (x : M) : c
 instance {M N : Type _} [MulAction ℝ≥0∞ M] [MulAction ℝ≥0∞ N] [SMul M N] [IsScalarTower ℝ≥0∞ M N] :
     IsScalarTower ℝ≥0 M N where smul_assoc r := (smul_assoc (r : ℝ≥0∞) : _)
 
-instance sMulCommClass_left {M N : Type _} [MulAction ℝ≥0∞ N] [SMul M N] [SMulCommClass ℝ≥0∞ M N] :
+instance smulCommClass_left {M N : Type _} [MulAction ℝ≥0∞ N] [SMul M N] [SMulCommClass ℝ≥0∞ M N] :
     SMulCommClass ℝ≥0 M N where smul_comm r := (smul_comm (r : ℝ≥0∞) : _)
-#align ennreal.smul_comm_class_left ENNReal.sMulCommClass_left
+#align ennreal.smul_comm_class_left ENNReal.smulCommClass_left
 
-instance sMulCommClass_right {M N : Type _} [MulAction ℝ≥0∞ N] [SMul M N] [SMulCommClass M ℝ≥0∞ N] :
+instance smulCommClass_right {M N : Type _} [MulAction ℝ≥0∞ N] [SMul M N] [SMulCommClass M ℝ≥0∞ N] :
     SMulCommClass M ℝ≥0 N where smul_comm m r := (smul_comm m (r : ℝ≥0∞) : _)
-#align ennreal.smul_comm_class_right ENNReal.sMulCommClass_right
+#align ennreal.smul_comm_class_right ENNReal.smulCommClass_right
 
 /-- A `DistribMulAction` over `ℝ≥0∞` restricts to a `DistribMulAction` over `ℝ≥0`. -/
 noncomputable instance {M : Type _} [AddMonoid M] [DistribMulAction ℝ≥0∞ M] :

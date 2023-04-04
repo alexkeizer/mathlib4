@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Johannes Hölzl
 
 ! This file was ported from Lean 3 source module linear_algebra.finsupp
-! leanprover-community/mathlib commit dc6c365e751e34d100e80fe6e314c3c3e0fd2988
+! leanprover-community/mathlib commit 3dec44d0b621a174c56e994da4aae15ba60110a2
 ! Please do not edit these lines, except to modify the commit id
 ! if you have ported upstream changes.
 -/
@@ -255,7 +255,7 @@ end
 theorem restrictDom_comp_subtype (s : Set α) :
     (restrictDom M R s).comp (Submodule.subtype _) = LinearMap.id := by
   ext (l a)
-  by_cases a ∈ s <;> simp [h]
+  by_cases h : a ∈ s <;> simp [h]
   exact ((mem_supported' R l.1).1 l.2 a h).symm
 #align finsupp.restrict_dom_comp_subtype Finsupp.restrictDom_comp_subtype
 
@@ -292,7 +292,7 @@ theorem supported_unionᵢ {δ : Type _} (s : δ → Set α) :
   refine Finsupp.induction l ?_ ?_
   · exact zero_mem _
   · refine' fun x a l _ _ => add_mem _
-    by_cases ∃ i, x ∈ s i <;> simp [h]
+    by_cases h : ∃ i, x ∈ s i <;> simp [h]
     · cases' h with i hi
       exact le_supᵢ (fun i => supported M R (s i)) i (single_mem_supported R _ hi)
 #align finsupp.supported_Union Finsupp.supported_unionᵢ
@@ -389,7 +389,8 @@ end LSum
 
 section
 
-variable (M) (R) (X : Type _)
+variable (M) (R) (X : Type _) (S)
+variable [Module S M] [SMulCommClass R S M]
 
 /-- A slight rearrangement from `lsum` gives us
 the bijection underlying the free-forgetful adjunction for R-modules.
@@ -408,6 +409,30 @@ theorem lift_symm_apply (f) (x) : ((lift M R X).symm f) x = f (single x 1) :=
 theorem lift_apply (f) (g) : ((lift M R X) f) g = g.sum fun x r => r • f x :=
   rfl
 #align finsupp.lift_apply Finsupp.lift_apply
+
+/-- Given compatible `S` and `R`-module structures on `M` and a type `X`, the set of functions
+`X → M` is `S`-linearly equivalent to the `R`-linear maps from the free `R`-module
+on `X` to `M`. -/
+noncomputable def llift : (X → M) ≃ₗ[S] (X →₀ R) →ₗ[R] M :=
+  { lift M R X with
+    map_smul' := by
+      intros
+      dsimp
+      ext
+      simp only [coe_comp, Function.comp_apply, lsingle_apply, lift_apply, Pi.smul_apply,
+        sum_single_index, zero_smul, one_smul, LinearMap.smul_apply] }
+#align finsupp.llift Finsupp.llift
+
+@[simp]
+theorem llift_apply (f : X → M) (x : X →₀ R) : llift M R S X f x = lift M R X f x :=
+  rfl
+#align finsupp.llift_apply Finsupp.llift_apply
+
+@[simp]
+theorem llift_symm_apply (f : (X →₀ R) →ₗ[R] M) (x : X) :
+    (llift M R S X).symm f x = f (single x 1) :=
+  rfl
+#align finsupp.llift_symm_apply Finsupp.llift_symm_apply
 
 end
 
@@ -653,7 +678,7 @@ theorem span_image_eq_map_total (s : Set α) :
     have : ∀ i, z i • v i ∈ span R (v '' s) := by
       intro c
       haveI := Classical.decPred fun x => x ∈ s
-      by_cases c ∈ s
+      by_cases h : c ∈ s
       · exact smul_mem _ _ (subset_span (Set.mem_image_of_mem _ h))
       · simp [(Finsupp.mem_supported' R _).1 hz _ h]
     -- Porting note: `rw` is required to infer metavariables in `sum_mem`.
@@ -905,8 +930,8 @@ def sumFinsuppLEquivProdFinsupp {α β : Type _} : (Sum α β →₀ M) ≃ₗ[R
       intros
       ext <;>
         -- Porting note: `add_equiv.to_fun_eq_coe` →
-        --               `Equiv.toFun_as_coe` & `AddEquiv.coe_toEquiv`
-        simp only [Equiv.toFun_as_coe, AddEquiv.coe_toEquiv, Prod.smul_fst,
+        --               `Equiv.toFun_as_coe` & `AddEquiv.toEquiv_eq_coe` & `AddEquiv.coe_toEquiv`
+        simp only [Equiv.toFun_as_coe, AddEquiv.toEquiv_eq_coe, AddEquiv.coe_toEquiv, Prod.smul_fst,
           Prod.smul_snd, smul_apply,
           snd_sumFinsuppAddEquivProdFinsupp, fst_sumFinsuppAddEquivProdFinsupp,
           RingHom.id_apply] }

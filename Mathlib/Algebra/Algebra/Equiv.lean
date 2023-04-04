@@ -129,6 +129,11 @@ instance : EquivLike (A₁ ≃ₐ[R] A₂) A₁ A₂ where
 def Simps.apply (e : A₁ ≃ₐ[R] A₂) : A₁ → A₂ :=
   e
 
+-- Porting note: the default simps projection was `e.toEquiv`, it should be `EquivLike.toEquiv`
+/-- See Note [custom simps projection] -/
+def Simps.toEquiv (e : A₁ ≃ₐ[R] A₂) : A₁ ≃ A₂ :=
+  e
+
 -- Porting note: `protected` used to be an attribute below
 @[simp]
 protected theorem coe_coe {F : Type _} [AlgEquivClass F R A₁ A₂] (f : F) :
@@ -175,9 +180,12 @@ theorem mk_coe (e : A₁ ≃ₐ[R] A₂) (e' h₁ h₂ h₃ h₄ h₅) :
 #align alg_equiv.mk_coe AlgEquiv.mk_coe
 
 -- Porting note: `toFun_eq_coe` no longer needed in Lean4
-#noalign algebra_equiv.to_fun_eq_coe
--- Porting note: `toEquiv_eq_coe` no longer needed in Lean4
-#noalign algebra_equiv.to_equiv_eq_coe
+#noalign alg_equiv.to_fun_eq_coe
+
+@[simp]
+theorem toEquiv_eq_coe : e.toEquiv = e :=
+  rfl
+#align alg_equiv.to_equiv_eq_coe AlgEquiv.toEquiv_eq_coe
 
 @[simp]
 theorem toRingEquiv_eq_coe : e.toRingEquiv = e :=
@@ -189,9 +197,9 @@ theorem coe_ringEquiv : ((e : A₁ ≃+* A₂) : A₁ → A₂) = e :=
   rfl
 #align alg_equiv.coe_ring_equiv AlgEquiv.coe_ringEquiv
 
-theorem coe_ring_equiv' : (e.toRingEquiv : A₁ → A₂) = e :=
+theorem coe_ringEquiv' : (e.toRingEquiv : A₁ → A₂) = e :=
   rfl
-#align alg_equiv.coe_ring_equiv' AlgEquiv.coe_ring_equiv'
+#align alg_equiv.coe_ring_equiv' AlgEquiv.coe_ringEquiv'
 
 theorem coe_ringEquiv_injective : Function.Injective ((↑) : (A₁ ≃ₐ[R] A₂) → A₁ ≃+* A₂) :=
   fun _ _ h => ext <| RingEquiv.congr_fun h
@@ -315,7 +323,7 @@ def Simps.symm_apply (e : A₁ ≃ₐ[R] A₂) : A₂ → A₁ :=
   e.symm
 #align alg_equiv.simps.symm_apply AlgEquiv.Simps.symm_apply
 
-initialize_simps_projections AlgEquiv (toEquiv_toFun → apply,toEquiv_invFun → symm_apply)
+initialize_simps_projections AlgEquiv (toFun → apply, invFun → symm_apply)
 
 --@[simp] -- Porting note: simp can prove this once symm_mk is introduced
 theorem coe_apply_coe_coe_symm_apply {F : Type _} [AlgEquivClass F R A₁ A₂] (f : F) (x : A₂) :
@@ -331,7 +339,7 @@ theorem coe_coe_symm_apply_coe_apply {F : Type _} [AlgEquivClass F R A₁ A₂] 
 
 -- Porting note: `simp` normal form of `invFun_eq_symm`
 @[simp]
-theorem symm_toEquiv_eq_symm {e : A₁ ≃ₐ[R] A₂} : e.toEquiv.symm = e.symm :=
+theorem symm_toEquiv_eq_symm {e : A₁ ≃ₐ[R] A₂} : (e : A₁ ≃ A₂).symm = e.symm :=
   rfl
 
 theorem invFun_eq_symm {e : A₁ ≃ₐ[R] A₂} : e.invFun = e.symm :=
@@ -643,7 +651,7 @@ def ofRingEquiv {f : A₁ ≃+* A₂} (hf : ∀ x, f (algebraMap R A₁ x) = alg
 end OfRingEquiv
 
 -- Porting note: projections mul & one not found, removed [simps] and added theorems manually
--- @[simps (config := { attrs := [] }) one]
+-- @[simps (config := .lemmasOnly) one]
 instance aut : Group (A₁ ≃ₐ[R] A₁) where
   mul ϕ ψ := ψ.trans ϕ
   mul_assoc ϕ ψ χ := rfl
@@ -727,13 +735,13 @@ instance apply_faithfulSMul : FaithfulSMul (A₁ ≃ₐ[R] A₁) A₁ :=
   ⟨AlgEquiv.ext⟩
 #align alg_equiv.apply_has_faithful_smul AlgEquiv.apply_faithfulSMul
 
-instance apply_sMulCommClass : SMulCommClass R (A₁ ≃ₐ[R] A₁) A₁
+instance apply_smulCommClass : SMulCommClass R (A₁ ≃ₐ[R] A₁) A₁
     where smul_comm r e a := (e.map_smul r a).symm
-#align alg_equiv.apply_smul_comm_class AlgEquiv.apply_sMulCommClass
+#align alg_equiv.apply_smul_comm_class AlgEquiv.apply_smulCommClass
 
-instance apply_smul_comm_class' : SMulCommClass (A₁ ≃ₐ[R] A₁) R A₁
+instance apply_smulCommClass' : SMulCommClass (A₁ ≃ₐ[R] A₁) R A₁
     where smul_comm e r a := e.map_smul r a
-#align alg_equiv.apply_smul_comm_class' AlgEquiv.apply_smul_comm_class'
+#align alg_equiv.apply_smul_comm_class' AlgEquiv.apply_smulCommClass'
 
 @[simp]
 theorem algebraMap_eq_apply (e : A₁ ≃ₐ[R] A₂) {y : R} {x : A₁} :
