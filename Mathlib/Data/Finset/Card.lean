@@ -2,14 +2,11 @@
 Copyright (c) 2015 Microsoft Corporation. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Leonardo de Moura, Jeremy Avigad
-
-! This file was ported from Lean 3 source module data.finset.card
-! leanprover-community/mathlib commit 9003f28797c0664a49e4179487267c494477d853
-! Please do not edit these lines, except to modify the commit id
-! if you have ported upstream changes.
 -/
+import Mathlib.Init.CCLemmas
 import Mathlib.Data.Finset.Image
-import Mathlib.Tactic.ByContra
+
+#align_import data.finset.card from "leanprover-community/mathlib"@"9003f28797c0664a49e4179487267c494477d853"
 
 /-!
 # Cardinality of a finite set
@@ -36,7 +33,7 @@ Should we add a noncomputable version?
 
 open Function Multiset Nat
 
-variable {α β : Type _}
+variable {α β : Type*}
 
 namespace Finset
 
@@ -78,7 +75,7 @@ theorem card_pos : 0 < s.card ↔ s.Nonempty :=
   pos_iff_ne_zero.trans <| (not_congr card_eq_zero).trans nonempty_iff_ne_empty.symm
 #align finset.card_pos Finset.card_pos
 
-alias card_pos ↔ _ Nonempty.card_pos
+alias ⟨_, Nonempty.card_pos⟩ := card_pos
 #align finset.nonempty.card_pos Finset.Nonempty.card_pos
 
 theorem card_ne_zero_of_mem (h : a ∈ s) : s.card ≠ 0 :=
@@ -133,10 +130,21 @@ theorem card_doubleton (h : a ≠ b) : ({a, b} : Finset α).card = 2 := by
   rw [card_insert_of_not_mem (not_mem_singleton.2 h), card_singleton]
 #align finset.card_doubleton Finset.card_doubleton
 
+/-- $\#(s \setminus \{a\}) = \#s - 1$ if $a \in s$. -/
 @[simp]
 theorem card_erase_of_mem : a ∈ s → (s.erase a).card = s.card - 1 :=
   Multiset.card_erase_of_mem
 #align finset.card_erase_of_mem Finset.card_erase_of_mem
+
+/-- $\#(s \setminus \{a\}) = \#s - 1$ if $a \in s$.
+  This result is casted to any additive group with 1,
+  so that we don't have to work with `ℕ`-subtraction. -/
+@[simp]
+theorem cast_card_erase_of_mem {R} [AddGroupWithOne R] {s : Finset α} (hs : a ∈ s) :
+    ((s.erase a).card : R) = s.card - 1 := by
+  rw [card_erase_of_mem hs, Nat.cast_sub, Nat.cast_one]
+  rw [Nat.add_one_le_iff, Finset.card_pos]
+  exact ⟨a, hs⟩
 
 @[simp]
 theorem card_erase_add_one : a ∈ s → (s.erase a).card + 1 = s.card :=
@@ -177,7 +185,7 @@ theorem card_attach : s.attach.card = s.card :=
 
 end Finset
 
-section ToListMultiset
+section ToMLListultiset
 
 variable [DecidableEq α] (m : Multiset α) (l : List α)
 
@@ -206,7 +214,7 @@ theorem List.toFinset_card_of_nodup {l : List α} (h : l.Nodup) : l.toFinset.car
   Multiset.toFinset_card_of_nodup h
 #align list.to_finset_card_of_nodup List.toFinset_card_of_nodup
 
-end ToListMultiset
+end ToMLListultiset
 
 namespace Finset
 
@@ -294,7 +302,7 @@ theorem card_eq_of_bijective (f : ∀ i, i < n → α) (hf : ∀ a ∈ s, ∃ i,
     (hf' : ∀ (i) (h : i < n), f i h ∈ s)
     (f_inj : ∀ (i j) (hi : i < n) (hj : j < n), f i hi = f j hj → i = j) : s.card = n := by
   classical
-    have : ∀ a : α, a ∈ s ↔ ∃ (i : _)(hi : i ∈ range n), f i (mem_range.1 hi) = a := fun a =>
+    have : ∀ a : α, a ∈ s ↔ ∃ (i : _) (hi : i ∈ range n), f i (mem_range.1 hi) = a := fun a =>
       ⟨fun ha =>
         let ⟨i, hi, eq⟩ := hf a ha
         ⟨i, mem_range.2 hi, eq⟩,
@@ -333,7 +341,6 @@ theorem card_le_card_of_inj_on {t : Finset β} (f : α → β) (hf : ∀ a ∈ s
   classical calc
       s.card = (s.image f).card := (card_image_of_injOn f_inj).symm
       _ ≤ t.card := card_le_of_subset <| image_subset_iff.2 hf
-
 #align finset.card_le_card_of_inj_on Finset.card_le_card_of_inj_on
 
 /-- If there are more pigeons than pigeonholes, then there are two pigeons in the same pigeonhole.
@@ -353,7 +360,6 @@ theorem le_card_of_inj_on_range (f : ℕ → α) (hf : ∀ i < n, f i ∈ s)
   calc
     n = card (range n) := (card_range n).symm
     _ ≤ s.card := card_le_card_of_inj_on f (by simpa only [mem_range] ) (by simpa only [mem_range] )
-
 #align finset.le_card_of_inj_on_range Finset.le_card_of_inj_on_range
 
 theorem surj_on_of_inj_on_of_card_le {t : Finset β} (f : ∀ a ∈ s, β) (hf : ∀ a ha, f a ha ∈ t)
@@ -446,7 +452,6 @@ theorem le_card_sdiff (s t : Finset α) : t.card - s.card ≤ card (t \ s) :=
       tsub_le_tsub_left (card_le_of_subset (inter_subset_left s t)) _
     _ = card (t \ (s ∩ t)) := (card_sdiff (inter_subset_right s t)).symm
     _ ≤ card (t \ s) := by rw [sdiff_inter_self_right t s]
-
 #align finset.le_card_sdiff Finset.le_card_sdiff
 
 theorem card_le_card_sdiff_add_card : s.card ≤ (s \ t).card + t.card :=
@@ -456,6 +461,9 @@ theorem card_le_card_sdiff_add_card : s.card ≤ (s \ t).card + t.card :=
 theorem card_sdiff_add_card : (s \ t).card + t.card = (s ∪ t).card := by
   rw [← card_disjoint_union sdiff_disjoint, sdiff_union_self_eq_union]
 #align finset.card_sdiff_add_card Finset.card_sdiff_add_card
+
+lemma card_sdiff_comm (h : s.card = t.card) : (s \ t).card = (t \ s).card :=
+  add_left_injective t.card $ by simp_rw [card_sdiff_add_card, ←h, card_sdiff_add_card, union_comm]
 
 end Lattice
 
@@ -498,8 +506,7 @@ theorem exists_smaller_set (A : Finset α) (i : ℕ) (h₁ : i ≤ card A) :
 #align finset.exists_smaller_set Finset.exists_smaller_set
 
 theorem exists_subset_or_subset_of_two_mul_lt_card [DecidableEq α] {X Y : Finset α} {n : ℕ}
-    (hXY : 2 * n < (X ∪ Y).card) : ∃ C : Finset α, n < C.card ∧ (C ⊆ X ∨ C ⊆ Y) :=
-  by
+    (hXY : 2 * n < (X ∪ Y).card) : ∃ C : Finset α, n < C.card ∧ (C ⊆ X ∨ C ⊆ Y) := by
   have h₁ : (X ∩ (Y \ X)).card = 0 := Finset.card_eq_zero.mpr (Finset.inter_sdiff_self X Y)
   have h₂ : (X ∪ Y).card = X.card + (Y \ X).card := by
     rw [← card_union_add_card_inter X (Y \ X), Finset.union_sdiff_self_eq_union, h₁, add_zero]
@@ -518,7 +525,7 @@ theorem card_eq_one : s.card = 1 ↔ ∃ a, s = {a} := by
 #align finset.card_eq_one Finset.card_eq_one
 
 theorem exists_eq_insert_iff [DecidableEq α] {s t : Finset α} :
-    (∃ (a : _)(_ : a ∉ s), insert a s = t) ↔ s ⊆ t ∧ s.card + 1 = t.card := by
+    (∃ (a : _) (_ : a ∉ s), insert a s = t) ↔ s ⊆ t ∧ s.card + 1 = t.card := by
   constructor
   · rintro ⟨a, ha, rfl⟩
     exact ⟨subset_insert _ _, (card_insert_of_not_mem ha).symm⟩
@@ -546,6 +553,9 @@ theorem card_le_one_iff : s.card ≤ 1 ↔ ∀ {a b}, a ∈ s → b ∈ s → a 
   tauto
 #align finset.card_le_one_iff Finset.card_le_one_iff
 
+theorem card_le_one_iff_subsingleton_coe : s.card ≤ 1 ↔ Subsingleton (s : Type _) :=
+  card_le_one.trans (s : Set α).subsingleton_coe.symm
+
 theorem card_le_one_iff_subset_singleton [Nonempty α] : s.card ≤ 1 ↔ ∃ x : α, s ⊆ {x} := by
   refine' ⟨fun H => _, _⟩
   · obtain rfl | ⟨x, hx⟩ := s.eq_empty_or_nonempty
@@ -567,11 +577,13 @@ theorem one_lt_card : 1 < s.card ↔ ∃ a ∈ s, ∃ b ∈ s, a ≠ b := by
   exact card_le_one
 #align finset.one_lt_card Finset.one_lt_card
 
-theorem one_lt_card_iff : 1 < s.card ↔ ∃ a b, a ∈ s ∧ b ∈ s ∧ a ≠ b :=
-  by
+theorem one_lt_card_iff : 1 < s.card ↔ ∃ a b, a ∈ s ∧ b ∈ s ∧ a ≠ b := by
   rw [one_lt_card]
   simp only [exists_prop, exists_and_left]
 #align finset.one_lt_card_iff Finset.one_lt_card_iff
+
+theorem one_lt_card_iff_nontrivial_coe : 1 < s.card ↔ Nontrivial (s : Type _) := by
+  rw [← not_iff_not, not_lt, not_nontrivial_iff_subsingleton, card_le_one_iff_subsingleton_coe]
 
 theorem two_lt_card_iff : 2 < s.card ↔ ∃ a b c, a ∈ s ∧ b ∈ s ∧ c ∈ s ∧ a ≠ b ∧ a ≠ c ∧ b ≠ c := by
   classical
@@ -589,7 +601,7 @@ theorem two_lt_card_iff : 2 < s.card ↔ ∃ a b c, a ∈ s ∧ b ∈ s ∧ c �
 #align finset.two_lt_card_iff Finset.two_lt_card_iff
 
 theorem two_lt_card : 2 < s.card ↔ ∃ a ∈ s, ∃ b ∈ s, ∃ c ∈ s, a ≠ b ∧ a ≠ c ∧ b ≠ c := by
-  simp_rw [two_lt_card_iff, exists_prop, exists_and_left]
+  simp_rw [two_lt_card_iff, exists_and_left]
 #align finset.two_lt_card Finset.two_lt_card
 
 theorem exists_ne_of_one_lt_card (hs : 1 < s.card) (a : α) : ∃ b, b ∈ s ∧ b ≠ a := by
@@ -598,6 +610,19 @@ theorem exists_ne_of_one_lt_card (hs : 1 < s.card) (a : α) : ∃ b, b ∈ s ∧
   · exact ⟨x, hx, ne_of_ne_of_eq hxy ha⟩
   · exact ⟨y, hy, ha⟩
 #align finset.exists_ne_of_one_lt_card Finset.exists_ne_of_one_lt_card
+
+/-- If a Finset in a Pi type is nontrivial (has at least two elements), then
+  its projection to some factor is nontrivial, and the fibers of the projection
+  are proper subsets. -/
+lemma exists_of_one_lt_card_pi {ι : Type*} {α : ι → Type*} [∀ i, DecidableEq (α i)]
+    {s : Finset (∀ i, α i)} (h : 1 < s.card) :
+    ∃ i, 1 < (s.image (· i)).card ∧ ∀ ai, s.filter (· i = ai) ⊂ s := by
+  simp_rw [one_lt_card_iff, Function.ne_iff] at h ⊢
+  obtain ⟨a1, a2, h1, h2, i, hne⟩ := h
+  refine ⟨i, ⟨_, _, mem_image_of_mem _ h1, mem_image_of_mem _ h2, hne⟩, fun ai => ?_⟩
+  rw [filter_ssubset]
+  obtain rfl | hne := eq_or_ne (a2 i) ai
+  exacts [⟨a1, h1, hne⟩, ⟨a2, h2, hne⟩]
 
 theorem card_eq_succ [DecidableEq α] :
     s.card = n + 1 ↔ ∃ a t, a ∉ t ∧ insert a t = s ∧ t.card = n :=
@@ -637,7 +662,7 @@ theorem card_eq_three [DecidableEq α] :
 /-- Suppose that, given objects defined on all strict subsets of any finset `s`, one knows how to
 define an object on `s`. Then one can inductively define an object on all finsets, starting from
 the empty set and iterating. This can be used either to define data, or to prove properties. -/
-def strongInduction {p : Finset α → Sort _} (H : ∀ s, (∀ (t) (_ : t ⊂ s), p t) → p s) :
+def strongInduction {p : Finset α → Sort*} (H : ∀ s, (∀ (t) (_ : t ⊂ s), p t) → p s) :
     ∀ s : Finset α, p s
   | s =>
     H s fun t h =>
@@ -647,19 +672,19 @@ def strongInduction {p : Finset α → Sort _} (H : ∀ s, (∀ (t) (_ : t ⊂ s
 #align finset.strong_induction Finset.strongInduction
 
 @[nolint unusedHavesSuffices] --Porting note: false positive
-theorem strongInduction_eq {p : Finset α → Sort _} (H : ∀ s, (∀ (t) (_ : t ⊂ s), p t) → p s)
+theorem strongInduction_eq {p : Finset α → Sort*} (H : ∀ s, (∀ (t) (_ : t ⊂ s), p t) → p s)
     (s : Finset α) : strongInduction H s = H s fun t _ => strongInduction H t := by
   rw [strongInduction]
 #align finset.strong_induction_eq Finset.strongInduction_eq
 
 /-- Analogue of `strongInduction` with order of arguments swapped. -/
 @[elab_as_elim]
-def strongInductionOn {p : Finset α → Sort _} (s : Finset α) :
+def strongInductionOn {p : Finset α → Sort*} (s : Finset α) :
     (∀ s, (∀ (t) (_ : t ⊂ s), p t) → p s) → p s := fun H => strongInduction H s
 #align finset.strong_induction_on Finset.strongInductionOn
 
 @[nolint unusedHavesSuffices] --Porting note: false positive
-theorem strongInductionOn_eq {p : Finset α → Sort _} (s : Finset α)
+theorem strongInductionOn_eq {p : Finset α → Sort*} (s : Finset α)
     (H : ∀ s, (∀ (t) (_ : t ⊂ s), p t) → p s) :
     s.strongInductionOn H = H s fun t _ => t.strongInductionOn H := by
   dsimp only [strongInductionOn]
@@ -678,7 +703,7 @@ theorem case_strong_induction_on [DecidableEq α] {p : Finset α → Prop} (s : 
 `n`, one knows how to define `p s`. Then one can inductively define `p s` for all finsets `s` of
 cardinality less than `n`, starting from finsets of card `n` and iterating. This
 can be used either to define data, or to prove properties. -/
-def strongDownwardInduction {p : Finset α → Sort _} {n : ℕ}
+def strongDownwardInduction {p : Finset α → Sort*} {n : ℕ}
     (H : ∀ t₁, (∀ {t₂ : Finset α}, t₂.card ≤ n → t₁ ⊂ t₂ → p t₂) → t₁.card ≤ n → p t₁) :
     ∀ s : Finset α, s.card ≤ n → p s
   | s =>
@@ -689,7 +714,7 @@ def strongDownwardInduction {p : Finset α → Sort _} {n : ℕ}
 #align finset.strong_downward_induction Finset.strongDownwardInduction
 
 @[nolint unusedHavesSuffices] --Porting note: false positive
-theorem strongDownwardInduction_eq {p : Finset α → Sort _}
+theorem strongDownwardInduction_eq {p : Finset α → Sort*}
     (H : ∀ t₁, (∀ {t₂ : Finset α}, t₂.card ≤ n → t₁ ⊂ t₂ → p t₂) → t₁.card ≤ n → p t₁)
     (s : Finset α) :
     strongDownwardInduction H s = H s fun {t} ht _ => strongDownwardInduction H t ht := by
@@ -698,17 +723,16 @@ theorem strongDownwardInduction_eq {p : Finset α → Sort _}
 
 /-- Analogue of `strongDownwardInduction` with order of arguments swapped. -/
 @[elab_as_elim]
-def strongDownwardInductionOn {p : Finset α → Sort _} (s : Finset α)
+def strongDownwardInductionOn {p : Finset α → Sort*} (s : Finset α)
     (H : ∀ t₁, (∀ {t₂ : Finset α}, t₂.card ≤ n → t₁ ⊂ t₂ → p t₂) → t₁.card ≤ n → p t₁) :
     s.card ≤ n → p s :=
   strongDownwardInduction H s
 #align finset.strong_downward_induction_on Finset.strongDownwardInductionOn
 
 @[nolint unusedHavesSuffices] --Porting note: false positive
-theorem strongDownwardInductionOn_eq {p : Finset α → Sort _} (s : Finset α)
+theorem strongDownwardInductionOn_eq {p : Finset α → Sort*} (s : Finset α)
     (H : ∀ t₁, (∀ {t₂ : Finset α}, t₂.card ≤ n → t₁ ⊂ t₂ → p t₂) → t₁.card ≤ n → p t₁) :
-    s.strongDownwardInductionOn H = H s fun {t} ht _ => t.strongDownwardInductionOn H ht :=
-  by
+    s.strongDownwardInductionOn H = H s fun {t} ht _ => t.strongDownwardInductionOn H ht := by
   dsimp only [strongDownwardInductionOn]
   rw [strongDownwardInduction]
 #align finset.strong_downward_induction_on_eq Finset.strongDownwardInductionOn_eq

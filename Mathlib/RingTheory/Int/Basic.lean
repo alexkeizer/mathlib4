@@ -2,16 +2,13 @@
 Copyright (c) 2018 Johannes Hölzl. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Johannes Hölzl, Jens Wagemaker, Aaron Anderson
-
-! This file was ported from Lean 3 source module ring_theory.int.basic
-! leanprover-community/mathlib commit 2196ab363eb097c008d4497125e0dde23fb36db2
-! Please do not edit these lines, except to modify the commit id
-! if you have ported upstream changes.
 -/
 import Mathlib.Algebra.EuclideanDomain.Basic
 import Mathlib.Data.Nat.Factors
 import Mathlib.RingTheory.Coprime.Basic
 import Mathlib.RingTheory.PrincipalIdealDomain
+
+#align_import ring_theory.int.basic from "leanprover-community/mathlib"@"e655e4ea5c6d02854696f97494997ba4c31be802"
 
 /-!
 # Divisibility over ℕ and ℤ
@@ -202,7 +199,7 @@ theorem gcd_eq_one_iff_coprime {a b : ℤ} : Int.gcd a b = 1 ↔ IsCoprime a b :
     exact dvd_add ((coe_nat_dvd_left.mpr ha).mul_left _) ((coe_nat_dvd_left.mpr hb).mul_left _)
 #align int.gcd_eq_one_iff_coprime Int.gcd_eq_one_iff_coprime
 
-theorem coprime_iff_nat_coprime {a b : ℤ} : IsCoprime a b ↔ Nat.coprime a.natAbs b.natAbs := by
+theorem coprime_iff_nat_coprime {a b : ℤ} : IsCoprime a b ↔ Nat.Coprime a.natAbs b.natAbs := by
   rw [← gcd_eq_one_iff_coprime, Nat.coprime_iff_gcd_eq_one, gcd_eq_natAbs]
 #align int.coprime_iff_nat_coprime Int.coprime_iff_nat_coprime
 
@@ -385,8 +382,8 @@ namespace Int
 
 theorem zmultiples_natAbs (a : ℤ) :
     AddSubgroup.zmultiples (a.natAbs : ℤ) = AddSubgroup.zmultiples a :=
-  le_antisymm (AddSubgroup.zmultiples_subset (mem_zmultiples_iff.mpr (dvd_natAbs.mpr (dvd_refl a))))
-    (AddSubgroup.zmultiples_subset (mem_zmultiples_iff.mpr (natAbs_dvd.mpr (dvd_refl a))))
+  le_antisymm (AddSubgroup.zmultiples_le_of_mem (mem_zmultiples_iff.mpr (dvd_natAbs.mpr dvd_rfl)))
+    (AddSubgroup.zmultiples_le_of_mem (mem_zmultiples_iff.mpr (natAbs_dvd.mpr dvd_rfl)))
 #align int.zmultiples_nat_abs Int.zmultiples_natAbs
 
 theorem span_natAbs (a : ℤ) : Ideal.span ({(a.natAbs : ℤ)} : Set ℤ) = Ideal.span {a} := by
