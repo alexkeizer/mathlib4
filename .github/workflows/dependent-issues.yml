@@ -15,21 +15,21 @@ jobs:
           all_but_latest: true
           access_token: ${{ github.token }}
 
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: z0al/dependent-issues@v1
-        env:
-          # (Required) The token to use to make API calls to GitHub.
-          GITHUB_TOKEN: ${{ secrets.DEPENDENT_ISSUES_TOKEN }}
-        with:
-          # (Optional) The label to use to mark dependent issues
-          label: blocked-by-other-PR
+  # check:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: z0al/dependent-issues@v1
+  #       env:
+  #         # (Required) The token to use to make API calls to GitHub.
+  #         GITHUB_TOKEN: ${{ secrets.DEPENDENT_ISSUES_TOKEN }}
+  #       with:
+  #         # (Optional) The label to use to mark dependent issues
+  #         label: blocked-by-other-PR
 
-          # (Optional) Enable checking for dependencies in issues. Enable by
-          # setting the value to "on". Default "off"
-          check_issues: off
+  #         # (Optional) Enable checking for dependencies in issues. Enable by
+  #         # setting the value to "on". Default "off"
+  #         check_issues: off
 
-          # (Optional) A comma-separated list of keywords. Default
-          # "depends on, blocked by"
-          keywords: "- \\[ \\] depends on:,- \\[x\\] depends on:"
+  #         # (Optional) A comma-separated list of keywords. Default
+  #         # "depends on, blocked by"
+  #         keywords: "- \\[ \\] depends on:,- \\[x\\] depends on:"
