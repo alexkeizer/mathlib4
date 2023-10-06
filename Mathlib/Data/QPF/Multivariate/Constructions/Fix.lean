@@ -371,7 +371,7 @@ namespace Fix
 section
   variable [q : IsPolynomial F]
 
-  theorem wEquiv_is_rfl_of_isPolynomial (x y : q.P.W α) :
+  theorem wEquiv_is_rfl_of_isPolynomial {α} (x y : q.P.W α) :
     WEquiv x y → x = y :=
   by
 
@@ -396,7 +396,7 @@ section
     case trans ih₀ ih₁ =>
       apply Eq.trans ih₀ ih₁
 
-  theorem wrepr_id_of_IsPolynomial (x : q.P.W α) :
+  theorem wrepr_id_of_IsPolynomial {α} (x : q.P.W α) :
     wrepr x = x :=
   by
     apply wEquiv_is_rfl_of_isPolynomial
